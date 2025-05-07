@@ -69,6 +69,16 @@ main:
         li $t2, 0
         sw $t2, VELOCITY
 
+        # spam solve wordle
+        jal spam_solve
+
+        jal main_loop
+
+rest:
+        j       rest
+
+
+main_loop:
         li $t0 0
         sw $t0 VELOCITY
 
@@ -88,11 +98,29 @@ main:
         srl $t1 $t1 3
 
         
-        j main
+        j main_loop
 
-rest:
-        j       rest
+spam_solve:
+    sub $sp $sp 8
+    sw $ra 0($sp)
+    sw $s0 4($sp)
 
+    move $s0 $0
+
+    ss_for:
+        bge $s0 6 ss_endfor
+
+        jal solve_puzzle
+
+        addi $s0 $s0 1
+        j ss_for
+    ss_endfor:
+
+    lw $ra 0($sp)
+    lw $s0 4($sp)
+    sub $sp $sp 8
+    jal $ra
+    
 
     # wait the specified amount of time (in cycles), argument 0 = cycle num
 wait:
@@ -836,7 +864,7 @@ solve_puzzle:
         add $t0 $t0 $t1
         sw $s0 12($t0)
 
-        move $s0 $t0 #current_feedback = &feedbacks[i];
+        move $s0 $t0 # current_feedback = &feedbacks[i];
 
 
         addi $s1 $s1 1
@@ -932,6 +960,7 @@ timer_interrupt:
 feedback_interrupt:
 	sw      $0, FEEDBACK_ACK   
     #Fill in your timer interrupt code here
+
 
     la      $t0 feedback_received
     li      $t1 1
