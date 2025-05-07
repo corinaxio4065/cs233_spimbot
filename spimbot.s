@@ -79,6 +79,8 @@ main:
 
         jal go_to_slab
 
+        jal push_slab
+
         lw $t0 BOT_X
         lw $t1 BOT_Y
 
@@ -228,19 +230,51 @@ push_slab:
 
     # first push up or down
     bge $v0 20 pushing_up
+        li $s0 1
+    pushing_up:
+        li $s0 3
         #pusing down
-        pushing_up_bonk_loop:
-            move $a0 $s0
-            jal move_one
-            j pushing_up_bonk_loop
-
+    pushing_to_edge_bonk_loop:
+        jal check_bonk
+        beq $v0 1 pushed_to_edge
         
+        move $a0 $s0
+        jal move_one
+        j pushing_to_edge_bonk_loop
+
     pushed_to_edge:
+    # move left 2
+    li $a0 2
+    jal move_one
+    li $a0 2
+    jal move_one
+
+    bge $v0 20 pushing_up2
+        li $s0 1
+    pushing_up2:
+        li $s0 3
+    
+    move $a0 $s0
+    jal move_one
+
+    # PUSHHHH all the way to right
+    pushing_to_right:
+        jal check_bonk
+        beq $v0 1 end_push
+        
+        li $a0 0
+        jal move_one
+        j pushing_to_right
+
+    end_push:
+
 
     lw $ra 0($sp)
     lw $s0 4($sp)   # slab struct
     lw $s1 8($sp) 
     sub $sp $sp 12
+
+    jr $ra
 
 # goes to slab specified by slab struct in argument
 # arg 0 : slab_encoding_t   a1 = slab index
